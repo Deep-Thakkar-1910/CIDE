@@ -14,15 +14,16 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String       @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean      @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   sessions      Session[]
   accounts      Account[]
+  rooms         RoomMember[]
 
   @@unique([email])
   @@map("user")
@@ -74,4 +75,68 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model Room {
+  id          String       @id @default(cuid())
+  name        String       @db.VarChar(100) // limit the room name to 100 characters
+  type        RoomType
+  language    Languages
+  members     RoomMember[]
+  createdAt   DateTime     @default(now())
+  roomInvites RoomInvite[]
+
+  @@index([name], type: Hash)
+  @@map("rooms")
+}
+
+// This collection is used to make a many to many relation for rooms and users with extra metadata such as joiningDate and roles.
+model RoomMember {
+  id       String   @id @default(cuid())
+  roomId   String
+  userId   String
+  role     RoomRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@map("roommmebers")
+}
+
+// This collection is used to manage invitations for the users with a link that has expiry
+model RoomInvite {
+  id        String   @id @default(cuid())
+  roomId    String
+  token     String   @unique
+  role      RoomRole @default(MEMBER)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([token], type: Hash)
+  @@index([expiresAt(sort: Asc)], type: BTree)
+  @@map("roominvites")
+}
+
+// user can be an owner of the room or a member of the room
+// TODO: Future work implement a spectator role for the read only mode users 
+enum RoomRole {
+  OWNER
+  MEMBER
+  SPECTATOR
+}
+
+// Room can have a single file or a multiple file project
+// TODO: Future work implement a multi file room that would allow users to work with multiple files
+enum RoomType {
+  MULTI
+  SINGLE
+}
+
+// Currently supported languages
+enum Languages {
+  JAVASCRIPT
 }

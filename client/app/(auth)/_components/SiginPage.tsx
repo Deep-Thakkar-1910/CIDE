@@ -4,14 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Github, Chrome } from "lucide-react";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useSearchParams } from "next/navigation";
 
 export default function SigninPage() {
   const [isLoading, setIsLoading] = useState<"github" | "google" | null>(null);
+  const searchParams = useSearchParams();
+  const callbackURL = searchParams.get("callbackURL") || "/";
   const handleGithubLogin = () => {
     setIsLoading("github");
     authClient.signIn.social({
       provider: "github",
       errorCallbackURL: "/signin",
+      callbackURL,
     });
   };
 
