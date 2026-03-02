@@ -27,8 +27,11 @@ const VerifyJoin = async ({ token }: { token: string }) => {
           RedirectType.replace,
         ); // redirect to the room if the user is already a member
       }
+      return redirect(
+        `/?error=${err.response?.data.error}`,
+        RedirectType.replace,
+      ); // redirect to home page on error
     }
-    return redirect("/", RedirectType.replace); // redirect to home page on error
   }
 
   return redirect(`/room/${result?.data?.roomId}`, RedirectType.replace); // redirect to the room after successful verification

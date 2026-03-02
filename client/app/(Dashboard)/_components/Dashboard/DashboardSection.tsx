@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
-import { ArrowUpRightIcon, FolderCode, Plus } from "lucide-react";
+import { useState, useTransition, useMemo, useEffect } from "react";
+import { FolderCode, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import axios from "@/lib/axios";
@@ -23,6 +23,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { useSearchParams } from "next/navigation";
 
 // Fetch room api with search and filter
 const fetchRooms = async ({
@@ -62,6 +63,16 @@ export default function DashboardPage() {
     language: "",
     type: "",
   });
+
+  const searchParams = useSearchParams();
+  const errorToShow = searchParams.get("error");
+
+  useEffect(() => {
+    if (errorToShow) {
+      toast.error(errorToShow);
+      window.history.pushState({}, "", window.location.pathname); // remove the error query param from the url
+    }
+  }, [errorToShow]); // if error messages are present in the url, show them as toast and then remove them from the url to prevent showing them again on refresh
 
   const [, startTransition] = useTransition();
   const { data: session, isPending } = authClient.useSession();
