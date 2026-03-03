@@ -77,12 +77,13 @@ export default function DashboardPage() {
   const [, startTransition] = useTransition();
   const { data: session, isPending } = authClient.useSession();
 
-  const { data, fetchNextPage, hasNextPage, hasPreviousPage } =
+  const normalizedSearch = search.trim().toLowerCase();
+  const { data, fetchNextPage, hasNextPage, hasPreviousPage, isLoading } =
     useInfiniteQuery({
       queryKey: [
         "rooms",
         {
-          search: search.trim().toLowerCase(),
+          search: normalizedSearch,
           language: filters.language,
           roomType: filters.type,
         }, // merge the combinations for clean caching
@@ -90,7 +91,7 @@ export default function DashboardPage() {
       queryFn: ({ pageParam }) =>
         fetchRooms({
           pageParam,
-          search: search.trim().toLowerCase(),
+          search: normalizedSearch,
           language: filters.language,
           type: filters.type,
         }), // fetch rooms with current filters
@@ -161,7 +162,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Create Button */}
-      {allRooms.length > 0 && (
+      {allRooms.length > 0 && !isLoading && (
         <div className="mb-8">
           <Button
             onClick={() => setIsModalOpen(true)}
@@ -191,7 +192,7 @@ export default function DashboardPage() {
           />
         </>
       ) : (
-        <>
+        !isLoading && (
           <Empty className="border-border bg-card">
             <EmptyHeader>
               <EmptyMedia variant="icon">
@@ -213,7 +214,7 @@ export default function DashboardPage() {
               </Button>
             </EmptyContent>
           </Empty>
-        </>
+        )
       )}
 
       <RoomFilterDialog

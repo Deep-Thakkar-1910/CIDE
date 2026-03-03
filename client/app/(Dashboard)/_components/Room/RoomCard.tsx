@@ -56,12 +56,14 @@ export function RoomCard({ room }: RoomCardProps) {
           </p>
         </div>
         <div className="flex cursor-pointer gap-x-2">
-          <div
-            className="bg-primary/10 ml-4 shrink-0 rounded p-2"
-            onClick={() => setIsShareModalOpen(true)}
-          >
-            <TooltipComponent Icon={Share2} tooltipContent="Share" />
-          </div>
+          {room.role === RoomRole.OWNER && (
+            <div
+              className="bg-primary/10 ml-4 shrink-0 rounded p-2"
+              onClick={() => setIsShareModalOpen(true)}
+            >
+              <TooltipComponent Icon={Share2} tooltipContent="Share" />
+            </div>
+          )}
           <div className="bg-primary/10 ml-4 shrink-0 rounded p-2">
             {room.type === RoomType.MULTI ? (
               <TooltipComponent
@@ -118,7 +120,7 @@ export function RoomCard({ room }: RoomCardProps) {
       <RoomShareDialog
         open={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
-        roomId={room.id}
+        room={{ roomId: room.id, name: room.name }}
       />
     </div>
   );

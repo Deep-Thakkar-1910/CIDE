@@ -61,7 +61,7 @@ export function RoomFilterDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Filter Rooms</DialogTitle>
         </DialogHeader>

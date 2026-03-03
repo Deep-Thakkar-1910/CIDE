@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RoomSchema, RoomFormValues } from "@/lib/schemas/roomSchema";
@@ -45,6 +46,8 @@ import Image from "next/image";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { RoomShareDialog } from "../Room/RoomShareDialog";
 
 interface CreateRoomModalProps {
   isOpen: boolean;
@@ -52,6 +55,11 @@ interface CreateRoomModalProps {
 }
 
 export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
+  const queryClient = useQueryClient();
+  const [shareDialogRoomId, setShareDialogRoomId] = useState<string>("");
+  const [shareDialogRoomName, setShareDialogRoomName] = useState<string>("");
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState<boolean>(false);
+
   const form = useForm<RoomFormValues>({
     resolver: zodResolver(RoomSchema),
     defaultValues: {
@@ -62,23 +70,36 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
     mode: "onTouched",
   });
 
-  const onSubmit: SubmitHandler<RoomFormValues> = async (data) => {
-    try {
-      data.name = data.name.trim(); // trim the string so spaces do not mess with search functionality
-      const createRoomResult = await axios.post("/createroom", data);
-      if (createRoomResult.data.success) {
-        toast.success("Room Created Successfully!");
-        form.reset();
-        onClose();
-      }
-    } catch (err) {
+  const createRoomMutation = useMutation({
+    mutationFn: async (payload: RoomFormValues) => {
+      const response = await axios.post("/createroom", {
+        ...payload,
+        name: payload.name.trim(),
+      });
+      return response.data;
+    },
+    onSuccess: (result) => {
+      queryClient.removeQueries({
+        queryKey: ["rooms"],
+      });
+
+      toast.success("Room Created Successfully!");
+      form.reset();
+      onClose();
+      setShareDialogRoomId(result.room.id);
+      setShareDialogRoomName(result.room.name);
+      setIsShareDialogOpen(true);
+    },
+    onError: (err) => {
       if (err instanceof AxiosError) {
-        toast.error(err.response?.data.error);
+        toast.error(err.response?.data?.error || "Failed to create room");
         console.error(err.stack);
       }
-    }
+    },
+  });
 
-    // parentSubmit(data);
+  const onSubmit: SubmitHandler<RoomFormValues> = async (data) => {
+    await createRoomMutation.mutateAsync(data);
   };
 
   return (
@@ -214,17 +235,32 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
                 variant="outline"
                 className="flex-1 cursor-pointer"
                 onClick={onClose}
+                disabled={createRoomMutation.isPending}
               >
                 Cancel
               </Button>
 
-              <Button type="submit" className="flex-1 cursor-pointer">
-                Create Room
+              <Button
+                type="submit"
+                className="flex-1 cursor-pointer"
+                disabled={createRoomMutation.isPending}
+              >
+                {createRoomMutation.isPending ? "Creating..." : "Create Room"}
               </Button>
             </div>
           </form>
         </Form>
       </DialogContent>
+
+      <RoomShareDialog
+        open={isShareDialogOpen}
+        onClose={() => {
+          setIsShareDialogOpen(false);
+          setShareDialogRoomId("");
+          setShareDialogRoomName("");
+        }}
+        room={{ roomId: shareDialogRoomId, name: shareDialogRoomName }}
+      />
     </Dialog>
   );
 }

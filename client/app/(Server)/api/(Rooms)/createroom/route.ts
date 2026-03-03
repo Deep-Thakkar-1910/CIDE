@@ -39,5 +39,5 @@ export async function POST(req: NextRequest) {
       },
     },
   });
-  if (room) return NextResponse.json({ success: true }, { status: 201 });
+  if (room) return NextResponse.json({ success: true, room }, { status: 201 });
 }

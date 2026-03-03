@@ -33,7 +33,7 @@ import { Copy, Check } from "lucide-react";
 interface Props {
   open: boolean;
   onClose: () => void;
-  roomId: string;
+  room: { roomId: string; name: string };
 }
 const handleGenerate = async (role: RoomRole, roomId: string) => {
   try {
@@ -49,13 +49,13 @@ const handleGenerate = async (role: RoomRole, roomId: string) => {
   }
 };
 
-export function RoomShareDialog({ open, onClose, roomId }: Props) {
+export function RoomShareDialog({ open, onClose, room }: Props) {
   const [role, setRole] = useState<RoomRole>(RoomRole.MEMBER);
   const [copied, setCopied] = useState<boolean>(false);
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["invites", { roomId, role }],
-    queryFn: () => handleGenerate(role, roomId),
+  const { data, isLoading, refetch, isStale } = useQuery({
+    queryKey: ["invites", { roomId: room.roomId, role }],
+    queryFn: () => handleGenerate(role, room.roomId),
     enabled: false, // to disable fetching on mount
     staleTime: 10 * 60 * 1000, // 10 minute stale time to avoid duplicate api calls as our link expiry is 10 minutes
   });
@@ -79,9 +79,11 @@ export function RoomShareDialog({ open, onClose, roomId }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Generate Invite Link</DialogTitle>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader className="min-w-0">
+          <DialogTitle className="max-w-[90%] truncate">
+            Invite Collaborators to {room.name}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -151,7 +153,11 @@ export function RoomShareDialog({ open, onClose, roomId }: Props) {
             disabled={isLoading}
             className="w-full cursor-pointer"
           >
-            {isLoading ? "Generating..." : "Generate Link"}
+            {isLoading
+              ? "Generating..."
+              : isStale || !data
+                ? "Generate Link"
+                : "Above is your active invite link"}
           </Button>
         </DialogFooter>
       </DialogContent>

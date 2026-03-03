@@ -24,6 +24,7 @@ export default function SigninPage() {
     authClient.signIn.social({
       provider: "google",
       errorCallbackURL: "/signin",
+      callbackURL,
     });
   };
 
