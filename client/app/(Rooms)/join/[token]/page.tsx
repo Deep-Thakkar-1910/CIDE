@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { redirectAfterSignin } from "@/lib/utils/redirectAfterSignin";
 import { headers } from "next/headers";
 import { Suspense } from "react";
-import VerifyJoin from "./_VerifyJoin";
+import VerifyJoin from "../../_RoomComponents/VerifyJoin";
 
 export const metadata = {
   title: "Verify Invite",

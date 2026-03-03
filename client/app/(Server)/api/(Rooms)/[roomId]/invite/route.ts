@@ -3,6 +3,8 @@ import db from "@/lib/prisma";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { StatusTexts } from "@/lib/constants/StatusTexts";
+import { StatusCodes } from "@/lib/constants/StatusCodes";
 
 export async function POST(
   req: NextRequest,
@@ -15,7 +17,10 @@ export async function POST(
     });
 
     if (!session?.user)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: StatusTexts.UNAUTHORIZED },
+        { status: StatusCodes.UNAUTHORIZED },
+      );
 
     const { role } = await req.json();
     const { roomId } = await params; // get the room id from params
@@ -30,7 +35,10 @@ export async function POST(
     });
 
     if (!membership)
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json(
+        { error: StatusTexts.FORBIDDEN },
+        { status: StatusCodes.FORBIDDEN },
+      );
 
     // reuse active invite for same role
     const existing = await db.roomInvite.findFirst({
@@ -50,7 +58,7 @@ export async function POST(
           inviteUrl: `${process.env.BASE_URL}/join/${existing.token}`,
           expiresAt: existing.expiresAt,
         },
-        { status: 200 },
+        { status: StatusCodes.SUCCESS },
       );
     }
 
@@ -75,10 +83,12 @@ export async function POST(
       { status: 200 },
     );
   } catch (err) {
-    console.error(err);
+    if (err instanceof Error) {
+      console.error("Error in get invite", err.stack);
+    }
     return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
+      { error: StatusTexts.SERVER_ERROR },
+      { status: StatusCodes.SERVER_ERROR },
     );
   }
 }

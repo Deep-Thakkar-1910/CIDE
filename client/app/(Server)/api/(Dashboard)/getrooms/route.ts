@@ -1,4 +1,6 @@
 import { auth } from "@/lib/auth";
+import { StatusCodes } from "@/lib/constants/StatusCodes";
+import { StatusTexts } from "@/lib/constants/StatusTexts";
 import db from "@/lib/prisma";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
@@ -13,8 +15,8 @@ export async function GET(req: NextRequest) {
     // If there is no user logged in don't allow access
     if (!session?.user)
       return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 },
+        { error: StatusTexts.UNAUTHORIZED },
+        { status: StatusCodes.UNAUTHORIZED },
       );
 
     const userId = session.user.id;
@@ -103,13 +105,13 @@ export async function GET(req: NextRequest) {
           totalPages: Math.ceil(total / limit),
         },
       },
-      { status: 200 },
+      { status: StatusCodes.SUCCESS },
     );
   } catch (error) {
-    console.error("GET /rooms error:", error);
+    console.error("GET rooms error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
+      { error: StatusTexts.SERVER_ERROR },
+      { status: StatusCodes.SERVER_ERROR },
     );
   }
 }

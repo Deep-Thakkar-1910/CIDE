@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/prisma";
+import { StatusTexts } from "@/lib/constants/StatusTexts";
+import { StatusCodes } from "@/lib/constants/StatusCodes";
 export const POST = async (req: NextRequest) => {
   try {
     const { token } = await req.json();
@@ -9,7 +11,10 @@ export const POST = async (req: NextRequest) => {
       headers: await headers(),
     });
     if (!session?.user)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: StatusTexts.UNAUTHORIZED },
+        { status: StatusCodes.UNAUTHORIZED },
+      );
 
     // find the room invite
     const roomInvite = await db.roomInvite.findUnique({
@@ -19,7 +24,10 @@ export const POST = async (req: NextRequest) => {
     });
 
     if (!roomInvite)
-      return NextResponse.json({ error: "Invalid token" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: StatusCodes.BAD_REQUEST },
+      );
 
     // if the user is already a member of the room
     const existingMember = await db.roomMember.findFirst({
@@ -32,7 +40,7 @@ export const POST = async (req: NextRequest) => {
     if (existingMember)
       return NextResponse.json(
         { error: "User is already a member", roomId: roomInvite.roomId },
-        { status: 400 },
+        { status: StatusCodes.BAD_REQUEST },
       );
 
     // create the room member
@@ -49,11 +57,15 @@ export const POST = async (req: NextRequest) => {
         message: "Verification successful",
         roomId: roomInvite.roomId,
       },
-      { status: 200 },
+      { status: StatusCodes.SUCCESS },
     );
   } catch (err) {
     if (err instanceof Error) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
+      console.error("Error in verifyinvite: ", err.stack);
+      return NextResponse.json(
+        { error: StatusTexts.SERVER_ERROR },
+        { status: StatusCodes.SERVER_ERROR },
+      );
     }
   }
 };

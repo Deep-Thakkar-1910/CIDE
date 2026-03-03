@@ -17,4 +17,10 @@ export const auth = betterAuth({
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
     },
   },
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // 5 minute duration caching to avoid making db calls for session validations for performance
+    },
+  },
 });

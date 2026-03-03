@@ -1,0 +1,8 @@
+export enum StatusCodes {
+  UNAUTHORIZED = 401,
+  FORBIDDEN = 403,
+  BAD_REQUEST = 400,
+  SUCCESS = 200,
+  SERVER_ERROR = 500,
+  POST_SUCCESS = 201,
+}
