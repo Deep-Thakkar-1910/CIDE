@@ -15,29 +15,42 @@ import { OnMount, Editor } from "@monaco-editor/react";
 import RoomLoadingComponent from "./RoomLoadingComponent";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { useExecution } from "@/hooks/useExecution";
+import { Languages } from "@/generated/prisma/enums";
+import { LanguageMetaMap } from "@/lib/constants/AvailableLanguages";
+import { usePanelRef } from "react-resizable-panels";
 
 interface CodeEditorLayoutProps {
   roomId: string;
   roomName: string;
   userName: string;
-  language?: string;
+  language?: Languages;
   defaultCode?: string;
   token: string;
 }
 
 export function CodeEditorLayout({
-  language = "javascript",
+  language = Languages.JAVASCRIPT,
   roomId,
   userName,
   token,
 }: CodeEditorLayoutProps) {
   const terminalOpen = useTerminal((state) => state.terminalOpen);
+  const requestedMinSize = useTerminal((state) => state.requestedMinSize);
+  const clearMinSizeRequest = useTerminal((state) => state.clearMinSizeRequest);
   const toggleTerminal = useTerminal((state) => state.toggleTerminal);
+  const setCode = useExecution((state) => state.setCode);
+  const setLanguage = useExecution((state) => state.setLanguage);
 
   const providerRef = useRef<WebsocketProvider | null>(null);
   const bindingRef = useRef<MonacoBinding | null>(null);
+  const terminalPanelRef = usePanelRef();
+  const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
 
   const handleEditorMount: OnMount = (editor, monaco) => {
+    editorRef.current = editor;
+    setLanguage(language);
+
     // Creating a shared Yjs document
     const ydoc = new Y.Doc({});
 
@@ -125,6 +138,14 @@ export function CodeEditorLayout({
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
       toast.success("Your changes have been saved!"); // just show a success message on ctrl+s
     });
+
+    const model = editor.getModel();
+    if (!model) return;
+
+    setCode(model.getValue());
+    model.onDidChangeContent(() => {
+      setCode(model.getValue());
+    });
   };
 
   // Handle Ctrl+J keyboard shortcut
@@ -137,13 +158,54 @@ export function CodeEditorLayout({
     };
 
     window.addEventListener("keydown", handleKeyDown);
+    const handleFocusEditor = () => {
+      editorRef.current?.focus();
+    };
+    window.addEventListener("cide:focus-editor", handleFocusEditor);
     return () => {
       // cleanup
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("cide:focus-editor", handleFocusEditor);
       bindingRef.current?.destroy();
       providerRef.current?.destroy();
     };
   }, []);
+
+  useEffect(() => {
+    if (!terminalOpen || !requestedMinSize) return;
+
+    let rafId: number | null = null;
+    const applyResize = () => {
+      const panel = terminalPanelRef.current;
+      if (!panel) {
+        rafId = requestAnimationFrame(applyResize);
+        return;
+      }
+
+      try {
+        const rawSize = panel.getSize();
+        const currentSize =
+          typeof rawSize === "number" ? rawSize : rawSize?.asPercentage;
+
+        if (typeof currentSize !== "number") {
+          rafId = requestAnimationFrame(applyResize);
+          return;
+        }
+
+        if (currentSize < requestedMinSize) {
+          panel.resize(`${requestedMinSize}%`);
+        }
+        clearMinSizeRequest();
+      } catch {
+        rafId = requestAnimationFrame(applyResize);
+      }
+    };
+
+    rafId = requestAnimationFrame(applyResize);
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, [terminalOpen, requestedMinSize, clearMinSizeRequest, terminalPanelRef]);
 
   return (
     <div className="bg-background flex h-screen w-screen flex-col overflow-hidden pt-16">
@@ -151,12 +213,12 @@ export function CodeEditorLayout({
       <div className="relative flex flex-1 flex-col overflow-hidden">
         <ResizablePanelGroup orientation="vertical" className="flex-1">
           {/* Editor Panel */}
-          <ResizablePanel defaultSize={terminalOpen ? 60 : 100} minSize={30}>
+          <ResizablePanel defaultSize={terminalOpen ? 60 : 100}>
             <div className="bg-background relative h-full w-full">
               <Editor
                 height="100%"
                 width="100%"
-                language={language}
+                language={LanguageMetaMap[language].correspondingMonacoLang}
                 theme="vs-dark-custom"
                 options={{
                   minimap: { enabled: false },
@@ -202,10 +264,15 @@ export function CodeEditorLayout({
           {terminalOpen && (
             <>
               <ResizableHandle />
-              <ResizablePanel defaultSize={40} minSize={15}>
+              <ResizablePanel
+                panelRef={terminalPanelRef}
+                defaultSize={40}
+                minSize="20%"
+              >
                 <Terminal
                   isOpen={terminalOpen}
                   toggleTerminal={toggleTerminal}
+                  roomId={roomId}
                 />
               </ResizablePanel>
             </>

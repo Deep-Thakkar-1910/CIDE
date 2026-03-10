@@ -20,6 +20,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.3.1",
+    "ioredis": "5.4.1",
     "inngest": "^3.52.4",
     "inngest-cli": "^1.17.1",
     "jose": "^6.1.3",

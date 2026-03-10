@@ -31,6 +31,7 @@ const CodeEditorLayout = dynamic(
   () => import("./CodeEditor").then((mod) => mod.CodeEditorLayout),
   { ssr: false },
 ); // We don't want this to be rendered on server first because of Monaco Editor
+
 type AuthData = RoomMember & {
   roomName: string;
   token: string;
@@ -125,6 +126,7 @@ const RoomPageComponent = ({ roomId, user }: RoomPageComponentProps) => {
   return (
     <>
       <RoomNavbar
+        roomId={data!.roomId!}
         roomName={data!.roomName!}
         role={data!.role!}
         openInviteModal={() => setIsRoomModalOpen(true)}
@@ -135,6 +137,7 @@ const RoomPageComponent = ({ roomId, user }: RoomPageComponentProps) => {
         roomName={data!.roomName!}
         userName={data!.user.name}
         token={data!.token}
+        language={data!.room.language}
       />
       {/* Presence Sidebar */}
       {presenceOpen && <RoomMemberPresence roomName={data!.roomName} />}

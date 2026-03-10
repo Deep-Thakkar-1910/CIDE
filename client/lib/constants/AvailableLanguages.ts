@@ -6,11 +6,15 @@ export const LanguageMetaMap: Record<
     displayName: string;
     extension: string;
     imageUrl: string;
+    judge0Code: number;
+    correspondingMonacoLang: string;
   }
 > = {
   JAVASCRIPT: {
     displayName: "Javascript",
     extension: ".js",
     imageUrl: "/assets/logos/javascript.png",
+    judge0Code: 63,
+    correspondingMonacoLang: "javascript",
   },
 };

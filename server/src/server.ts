@@ -27,8 +27,16 @@ const chatWSS = new WebSocketServer({ noServer: true }); // websocket server res
 
 server.on("upgrade", async (req, socket, head) => {
   try {
-    const url = new URL(req.url!, "http://localhost");
+    // Check if request is from allowed Origin
+    const origin = req.headers.origin;
 
+    if (origin !== process.env.CORS_ALLOWED_ORIGIN) {
+      // Deny the connection if the origin is not allowed
+      socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+      socket.destroy();
+    }
+
+    const url = new URL(req.url!, "http://localhost");
     const token = url.searchParams.get("token"); // extracting the token from searchParams
     const pathname = url.pathname; // extracting route path (/yjs or /chat)
     const roomId = pathname.split("/").at(-1); // extracting roomId from pathName
