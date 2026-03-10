@@ -2,7 +2,9 @@
   "extends": "@tsconfig/node20/tsconfig.json",
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "moduleResolution": "bundler",
+    "module": "esnext"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

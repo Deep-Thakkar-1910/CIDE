@@ -30,7 +30,7 @@ import dynamic from "next/dynamic";
 const CodeEditorLayout = dynamic(
   () => import("./CodeEditor").then((mod) => mod.CodeEditorLayout),
   { ssr: false },
-); // We don't want this to be rendered on server first because of Monaco Editor
+); // We don't want this to be rendered on server first because of the browser editor runtime
 type AuthData = RoomMember & {
   roomName: string;
   token: string;
