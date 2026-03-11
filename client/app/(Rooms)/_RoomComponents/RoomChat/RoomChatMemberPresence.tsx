@@ -5,7 +5,6 @@ import { Fragment } from "react/jsx-runtime";
 
 const RoomMemberPresence = ({ roomName }: { roomName: string }) => {
   const members = useChat((state) => state.members);
-  console.log("Members in RoomChatMemberPresence:", members);
   return (
     <div className="fixed top-24 right-10 w-96 min-w-0">
       <div className="text-foreground bg-background h-10 rounded-t-md border border-b-0 p-2">

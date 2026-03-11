@@ -83,8 +83,6 @@ async function executeWithJudge0(
     { headers, timeout: 60000 },
   );
 
-  console.log("DAta: ", data);
-
   const stdout = decodeBase64(data.stdout);
   const stderr = decodeBase64(data.stderr);
   const compileOutput = decodeBase64(data.compile_output);
@@ -94,9 +92,7 @@ async function executeWithJudge0(
     .map((part) => (part ?? "").trim())
     .filter((part) => part.length > 0);
   const output =
-    outputParts.join("\n") ||
-    data.status?.description ||
-    "No output";
+    outputParts.join("\n") || data.status?.description || "No output";
 
   return {
     output,
@@ -140,11 +136,9 @@ export async function POST(req: NextRequest) {
     }
 
     const hash = createExecutionHash(roomId, code, input, language);
-    console.log("hash: ", hash, roomId, code, input, language);
     const cacheKey = `execution:result:${hash}`;
     const cached = await redis.get(cacheKey);
     if (cached) {
-      console.log("cached result;");
       const parsed = JSON.parse(cached) as ExecuteResult;
       return NextResponse.json({
         cached: true,
@@ -154,7 +148,6 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await executeWithJudge0(language, code, input);
-    console.log("Result: ", result);
     await redis.set(
       cacheKey,
       JSON.stringify(result),
