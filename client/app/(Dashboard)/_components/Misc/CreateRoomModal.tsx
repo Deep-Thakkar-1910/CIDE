@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RoomSchema, RoomFormValues } from "@/lib/schemas/roomSchema";
@@ -47,7 +47,6 @@ import axios from "@/lib/axios";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { RoomShareDialog } from "../Room/RoomShareDialog";
 import {
   Tooltip,
   TooltipContent,
@@ -55,6 +54,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
+import { useRouter } from "next/navigation";
 
 interface CreateRoomModalProps {
   isOpen: boolean;
@@ -62,11 +62,8 @@ interface CreateRoomModalProps {
 }
 
 export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
+  const router = useRouter();
   const queryClient = useQueryClient();
-  const [shareDialogRoomId, setShareDialogRoomId] = useState<string>("");
-  const [shareDialogRoomName, setShareDialogRoomName] = useState<string>("");
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState<boolean>(false);
-
   const form = useForm<RoomFormValues>({
     resolver: zodResolver(RoomSchema),
     defaultValues: {
@@ -93,9 +90,7 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
       toast.success("Room Created Successfully!");
       form.reset();
       onClose();
-      setShareDialogRoomId(result.room.id);
-      setShareDialogRoomName(result.room.name);
-      setIsShareDialogOpen(true);
+      router.push(`/room/${result.room.id}`);
     },
     onError: (err) => {
       if (err instanceof AxiosError) {
@@ -274,16 +269,6 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
           </Form>
         </TooltipProvider>
       </DialogContent>
-
-      <RoomShareDialog
-        open={isShareDialogOpen}
-        onClose={() => {
-          setIsShareDialogOpen(false);
-          setShareDialogRoomId("");
-          setShareDialogRoomName("");
-        }}
-        room={{ roomId: shareDialogRoomId, name: shareDialogRoomName }}
-      />
     </Dialog>
   );
 }
