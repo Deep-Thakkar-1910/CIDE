@@ -78,36 +78,42 @@ export default function DashboardPage() {
   const { data: session, isPending } = authClient.useSession();
 
   const normalizedSearch = search.trim().toLowerCase();
-  const { data, fetchNextPage, hasNextPage, hasPreviousPage, isLoading } =
-    useInfiniteQuery({
-      queryKey: [
-        "rooms",
-        {
-          search: normalizedSearch,
-          language: filters.language,
-          roomType: filters.type,
-        }, // merge the combinations for clean caching
-      ],
-      queryFn: ({ pageParam }) =>
-        fetchRooms({
-          pageParam,
-          search: normalizedSearch,
-          language: filters.language,
-          type: filters.type,
-        }), // fetch rooms with current filters
-      initialPageParam: 1,
-      getNextPageParam: (lastPage) => {
-        const { page, totalPages } = lastPage.meta;
-        return page < totalPages ? page + 1 : undefined; // return undefined if on last page to help with pagination
-      },
-      getPreviousPageParam: (firstPage) => {
-        const { page } = firstPage.meta;
-        return page > 1 ? page - 1 : undefined; // return undefined if on first page to help with pagination
-      },
-      staleTime: 1000 * 60 * 5,
-      refetchOnMount: false, // to prevent refetching on tab switches if data is fresh
-      refetchOnWindowFocus: false,
-    });
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    hasPreviousPage,
+    isFetching,
+    isLoading,
+  } = useInfiniteQuery({
+    queryKey: [
+      "rooms",
+      {
+        search: normalizedSearch,
+        language: filters.language,
+        roomType: filters.type,
+      }, // merge the combinations for clean caching
+    ],
+    queryFn: ({ pageParam }) =>
+      fetchRooms({
+        pageParam,
+        search: normalizedSearch,
+        language: filters.language,
+        type: filters.type,
+      }), // fetch rooms with current filters
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.meta;
+      return page < totalPages ? page + 1 : undefined; // return undefined if on last page to help with pagination
+    },
+    getPreviousPageParam: (firstPage) => {
+      const { page } = firstPage.meta;
+      return page > 1 ? page - 1 : undefined; // return undefined if on first page to help with pagination
+    },
+    staleTime: 1000 * 60 * 5,
+    refetchOnMount: false, // to prevent refetching on tab switches if data is fresh
+    refetchOnWindowFocus: false,
+  });
 
   const totalPages = data?.pages[0]?.meta.totalPages ?? 1;
 
@@ -128,7 +134,7 @@ export default function DashboardPage() {
     setCurrentPage(page);
   };
 
-  if (isPending) return <DashboardSkeleton />;
+  if (isPending || isFetching) return <DashboardSkeleton />;
 
   return (
     <section className="mx-auto w-[80%] max-w-6xl py-8 lg:w-full lg:place-self-start">

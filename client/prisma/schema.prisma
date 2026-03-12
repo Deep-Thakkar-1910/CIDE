@@ -139,4 +139,10 @@ enum RoomType {
 // Currently supported languages
 enum Languages {
   JAVASCRIPT
+  PYTHON
+  JAVA
+  CPP
+  GO
+  RUST
+  TYPESCRIPT
 }

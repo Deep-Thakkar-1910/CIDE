@@ -69,6 +69,7 @@ export function CodeEditorLayout({
     providerRef.current = provider; // assigning provider to ref for cleanup later
 
     const yText = ydoc.getText("monaco");
+    const starterCode = LanguageMetaMap[language].starterCode;
     // For setting up awareness (for multi-cursor)
     const awareness = provider.awareness;
 
@@ -122,6 +123,19 @@ export function CodeEditorLayout({
       new Set([editor]),
       awareness,
     );
+
+    let starterInitialized = false;
+    const initializeStarterCode = (isSynced: boolean) => {
+      if (!isSynced || starterInitialized) return;
+      starterInitialized = true;
+
+      if (yText.length === 0) {
+        ydoc.transact(() => {
+          yText.insert(0, starterCode);
+        });
+      }
+    };
+    provider.on("sync", initializeStarterCode);
 
     const undoManager = new Y.UndoManager(yText, {
       trackedOrigins: new Set([bindingRef.current]),
