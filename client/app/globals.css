@@ -130,7 +130,7 @@
   /* Remote selection highlight */
   /* selection highlight */
   [class*="yRemoteSelection-"] {
-    background-color: var(--yjs-selection-color, rgba(59, 130, 246, 0.12));
+    background-color: var(--yjs-selection-color, transparent);
   }
 
   /* caret */
