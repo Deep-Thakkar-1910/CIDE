@@ -42,6 +42,12 @@ services:
       PORT: "3000"
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
+    command:
+      [
+        "sh",
+        "-c",
+        "bun run postinstall && mkdir -p .next/dev/server/chunks/ssr && find .next/dev/server/chunks/ssr -mindepth 1 -maxdepth 1 -exec rm -rf {} + && bun run dev -- --hostname 0.0.0.0 --port 3000",
+      ]
     ports:
       - "3000:3000"
     volumes:
